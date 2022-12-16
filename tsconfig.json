@@ -21,6 +21,7 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
+    "src",
+		"./node_modules/@kws1207/types-eth-keyring-controller/index.d.ts"
   ]
 }
