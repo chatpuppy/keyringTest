@@ -66,12 +66,10 @@ function App() {
 		console.log("verifyPassword true");
 	}
 
-	const addNewKeyring = async (e: any) => {
-
-	}
-
 	const addNewAccount = async (e: any) => {
-
+		const keyring = await keyringController.getKeyringForAccount(address);
+		const result = await keyringController.addNewAccount(keyring);
+		console.log("addNewAccount result", result.keyrings[0].accounts);
 	}
 
 	const getKeyringForAccount = async (e: any) => {
@@ -94,6 +92,11 @@ function App() {
 		const priKey = keyring.wallets[0].privateKey;
 		console.log("Private key", priKey);
 	}
+
+	const getAccounts = async (e: any) => {
+		const accounts = await keyringController.getAccounts();
+		console.log("getAccounts result", accounts);
+	}
 	
   return (
     <div className="App">
@@ -102,7 +105,7 @@ function App() {
 				<div className="button" onClick={(e) => setLocked(e)}>Lock wallet</div>
 				<div className="button" onClick={(e) => unlock(e)}>Unlock wallet</div>
 				<div className="button" onClick={(e) => verifyPassword(e)}>Verify password</div>
-				<div className="button" onClick={(e) => addNewKeyring(e)}>Add a new keyring</div>
+				<div className="button" onClick={(e) => getAccounts(e)}>Get accounts</div>
 				<div className="button" onClick={(e) => addNewAccount(e)}>Add a new account</div>
 				<div className="button" onClick={(e) => getKeyringForAccount(e)}>Get keyring by address</div>
 				<div className="button" onClick={(e) => getEncryptionPublicKey(e)}>Get public key by address</div>
