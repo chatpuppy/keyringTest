@@ -1,23 +1,32 @@
-import React, {useEffect} from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import * as passworder from '@metamask/browser-passworder';
 import KeyringController from 'eth-keyring-controller';
 import SimpleKeyring from 'eth-simple-keyring';
+import HdKeyring from 'eth-hd-keyring';
 
 window.Buffer = window.Buffer || require("buffer").Buffer; 
 
 function App() {
+	const [currentAccount, setCurrentAccount] = useState('0x6756fB068c3Cce14DA7e32Ed666F00BEa8486958');
 	const secrets = { coolStuff: 'all', ssn: 'livin large' };
 	const password = 'hunter55';
 	const seed = "meat admit ivory unfold pistol alley work vault tilt witness lion talent";
-	const address = "0x6756fB068c3Cce14DA7e32Ed666F00BEa8486958";
 
 	const removeAccount = () => {
 
 	}
 
+	const newVaultHandler = () => {
+
+	}
+
+	const unlockHandler = () => {
+		
+	}
+
 	const keyringController = new KeyringController({
-		keyringTypes: [SimpleKeyring], // optional array of types to support.
+		keyringTypes: [SimpleKeyring, HdKeyring], // optional array of types to support.
 		// initState: initState.KeyringController, // Last emitted persisted state.
 		encryptor: undefined,
 	});
@@ -28,7 +37,8 @@ function App() {
 	});
 	
 	keyringController.on('removedAccount', removeAccount);
-
+	keyringController.on('newVault', newVaultHandler);
+	keyringController.on('unlock', unlockHandler);
 
 	const testEncryptAndDecrypt = () => {
 		passworder
@@ -46,13 +56,20 @@ function App() {
 		console.log('createNewVaultAndRestore result', result);
 	}
 
+	const createNewVaultAndKeychain = async (e: any) => {
+		const result = await keyringController.createNewVaultAndKeychain(password);
+		const account = result.keyrings[0].accounts[0];
+		console.log("createNewVaultAndKeychain result", result);
+		setCurrentAccount(account);
+	}
+
 	const submitPassword = async (pwd: string) => {
 		const result = await keyringController.submitPassword(pwd);
 		console.log('submitPassword result', result);
 	}
 
 	const createKeyring = async (e: any) => {
-		testEncryptAndDecrypt();
+		// testEncryptAndDecrypt();
 		await createNewVaultAndRestore();
 	}
 	
@@ -67,18 +84,18 @@ function App() {
 	}
 
 	const addNewAccount = async (e: any) => {
-		const keyring = await keyringController.getKeyringForAccount(address);
+		const keyring = await keyringController.getKeyringForAccount(currentAccount);
 		const result = await keyringController.addNewAccount(keyring);
 		console.log("addNewAccount result", result.keyrings[0].accounts);
 	}
 
 	const getKeyringForAccount = async (e: any) => {
-		const result = await keyringController.getKeyringForAccount(address);
+		const result = await keyringController.getKeyringForAccount(currentAccount);
 		console.log("getKeyringForAccount result", result);
 	}
 
 	const getEncryptionPublicKey = async (e: any) => {
-		const publicKey = await keyringController.getEncryptionPublicKey(address);
+		const publicKey = await keyringController.getEncryptionPublicKey(currentAccount);
 		console.log("getEncryptionPublicKey result", publicKey);
 	}
 
@@ -88,7 +105,7 @@ function App() {
 	}
 
 	const getPrivateKey = async (e: any) => {
-		const keyring = await keyringController.getKeyringForAccount(address);
+		const keyring = await keyringController.getKeyringForAccount(currentAccount);
 		const priKey = keyring.wallets[0].privateKey;
 		console.log("Private key", priKey);
 	}
@@ -101,7 +118,9 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-				<div className="button" onClick={(e) => createKeyring(e)}>Initialize wallet</div>
+				<div style={{fontSize: "18px", marginBottom: "10px"}}>{currentAccount}</div>
+				<div className="button" onClick={(e) => createKeyring(e)}>Initialize wallet by mnemonic </div>
+				<div className="button" onClick={(e) => createNewVaultAndKeychain(e)}>Initialize wallet by password </div>
 				<div className="button" onClick={(e) => setLocked(e)}>Lock wallet</div>
 				<div className="button" onClick={(e) => unlock(e)}>Unlock wallet</div>
 				<div className="button" onClick={(e) => verifyPassword(e)}>Verify password</div>
