@@ -25,6 +25,10 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
+		<script>
+			// To solve the browser don't have global buffer, please refer the url: https://github.com/vitejs/vite/issues/5970
+			window.global = window;
+		</script>
 	</head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

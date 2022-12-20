@@ -47,3 +47,25 @@
 	margin-bottom: 10px;
 	border-radius: 5px;
 }
+
+.content {
+	text-align: left;
+	width: 300px;
+	margin: 10px auto;
+	font-size: 18px;
+	background-color: #ccc;
+	color: black;
+	padding: 10px 20px;
+	word-wrap: break-word;
+}
+
+.input-text {
+	text-align: left;
+	margin: 10px auto;
+	width: 300px;
+	font-size: 18px;
+	background-color: white;
+	color: black;
+	padding: 10px 10px;
+	word-wrap: break-word;	
+}

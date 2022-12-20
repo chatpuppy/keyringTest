@@ -1,18 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import * as passworder from '@metamask/browser-passworder';
 import KeyringController from 'eth-keyring-controller';
 import SimpleKeyring from 'eth-simple-keyring';
 import HdKeyring from 'eth-hd-keyring';
+import * as sigUtil from "@metamask/eth-sig-util";
+import * as ethUtil from "ethereumjs-util";
 
 window.Buffer = window.Buffer || require("buffer").Buffer; 
 
 function App() {
-	const [currentAccount, setCurrentAccount] = useState('0x6756fB068c3Cce14DA7e32Ed666F00BEa8486958');
+	const [currentAccount, setCurrentAccount] = useState('');
+	const [currentChainId, setCurrentChainId] = useState(1);
+	const [encryptionPublicKey, setEncryptionPublicKey] = useState('');
+	const [inputText, setInputText] = useState('');
+	const [encryptedMessage, setEncryptedMessage] = useState('');
+	const [decryptedMessage, setDecryptedMessage] = useState('');
+
 	const secrets = { coolStuff: 'all', ssn: 'livin large' };
 	const password = 'hunter55';
 	const seed = "meat admit ivory unfold pistol alley work vault tilt witness lion talent";
 	const encryptedSecret = `{"data":"T+Q79TgFUVSgdKW8xGCj1NQgF+nmgC09h0/gcK4rQ8Q6ipQTTmWv2qkbZlatJa/lWXJjmjJMWIJZ8b8zpF/ychWH/n9G07Xm+Dw0ZOrZysvHGhSzdrMo7GMfotBeB9MY0IHz1fVtIgZGoiqbu1chb/TAGE7Cuo/hMzZsSciZHc6Fpa4KTcm+AvcGstI9OqIll+vA3lc80eayLg8WXAc4kNatygd8Fn4q07DHD6LLMZZ8lbGM+VdSBWu/rPQecupRU0xDzyWoRZK7POotUeSAvsKCLM2FloiR+hozY9vIB3IYG2lz0sbBtBkbMgGkKEC9iZkoY044WePO4Y3aazIaz1ZvnLBaGpI9TtiiXS6IlUi0NaKgO31T7NTc8mNo4X/zl4L/2S93L6a9ojHsfHFyGZMaZX+82kVeJkEdE7YeJUq5IFuW25VN+8T2OjRS/FHLMp0Du2hTn60FI/f2flZwxVHN9Jduqf9ihAag9hibvOeybToMv30LhYnvdwhP","iv":"DsLw7ergwFepPG3cr7WbqA==","salt":"h5DQGdRoG0SMiXec05m6hrXFfuG6pne2xjJz+H4u3zc="}`;
+
+	const initialized = useRef(false);
+	
+	useEffect(():any => {
+		console.log('initialized', initialized.current)
+		const init = async () => {
+			if(initialized.current) return;
+			if(currentAccount === '') {
+				if(!window.ethereum) {
+					// console.log("Please install metamask wallet!");
+					console.log("install_metamask");
+					// setLoading(false);
+					return;
+				}
+				const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+				setCurrentChainId(parseInt(chainId, 16));
+				let accounts:Array<string> = await window.ethereum.request({ method: 'eth_accounts' });
+				if (accounts.length === 0) {
+					// No account connected
+					await window.ethereum.request({ method: 'eth_requestAccounts'});
+					accounts = await window.ethereum.request({ method: 'eth_accounts' });
+				} 
+				setCurrentAccount(accounts[0]);
+			}	
+		}
+		init();
+		return () => initialized.current = true;
+	},[]);
 
 	const removeAccount = () => {
 
@@ -123,14 +159,68 @@ function App() {
 			initState: {vault: encryptedSecret},
 			encryptor: undefined,
 		})
+		console.log(keyringController.store);
+		console.log(keyringController.memStore);
 		console.log("initVaultByLocalStore succeed, unlock and use it.");
 		// 导入的vault必须要unlock，才能使用
 	}
 
+	const getEncryptionPublicKeyByWallet = async (e: any) => {
+		try {
+			const encryptionPublicKey = await window.ethereum.request({
+				method: 'eth_getEncryptionPublicKey',
+				params: [currentAccount],
+			});
+			const publicKey = Buffer.from(encryptionPublicKey, 'base64').toString("hex");
+			// console.log("address:", address)
+			console.log("publicKey:" , publicKey);
+			console.log("encryptionPublicKey", encryptionPublicKey);
+			setEncryptionPublicKey(encryptionPublicKey);
+		} catch (error: any) {
+			console.log(error);
+		}
+	}
+
+	const encryptMessage = async (e: any) => {
+		const enc = sigUtil.encrypt({
+			publicKey: encryptionPublicKey,
+			data: inputText,
+			version: 'x25519-xsalsa20-poly1305',
+		})
+	
+		const encryptedMessage = ethUtil.bufferToHex(stringToUint8Array(JSON.stringify(enc)) as any);
+		console.log("encryptedMessage", encryptedMessage)
+		setEncryptedMessage(encryptedMessage);
+	}
+
+	const decryptMessage = async (e: any) => {
+		try {
+			const decryptedMessage = await window.ethereum.request({
+				method: "eth_decrypt",
+				params: [encryptedMessage, currentAccount],
+			});
+			console.log(decryptedMessage)
+			setDecryptedMessage(decryptedMessage);
+		} catch (error) {
+			return false;
+		}
+	}
+	
+	const stringToUint8Array = (str: string): Uint8Array => {
+		let arr = [];
+		for (let i = 0, j = str.length; i < j; ++i) {
+			arr.push(str.charCodeAt(i));
+		}
+	
+		const tmpUint8Array = new Uint8Array(arr);
+		return tmpUint8Array
+	}
+	
+
   return (
     <div className="App">
       <header className="App-header">
-				<div style={{fontSize: "18px", marginBottom: "10px"}}>{currentAccount}</div>
+				{/* <div style={{fontSize: "18px", marginBottom: "10px"}}>{currentAccount}</div>
 				<div className="button" onClick={(e) => createKeyring(e)}>Initialize wallet by mnemonic </div>
 				<div className="button" onClick={(e) => initVaultByLocalStore(e)}>Initialize wallet by local store </div>
 				<div className="button" onClick={(e) => createNewVaultAndKeychain(e)}>Initialize wallet by password </div>
@@ -141,9 +231,16 @@ function App() {
 				<div className="button" onClick={(e) => addNewAccount(e)}>Add a new account</div>
 				<div className="button" onClick={(e) => getKeyringForAccount(e)}>Get keyring by address</div>
 				<div className="button" onClick={(e) => getEncryptionPublicKey(e)}>Get public key by address</div>
-				<div className="button" onClick={(e) => getPrivateKey(e)}>Get private key for 1st address</div>
-				
-								
+				<div className="button" onClick={(e) => getPrivateKey(e)}>Get private key for 1st address</div> */}
+				<div style={{marginTop: "20px"}}>
+					<div className="button" onClick={(e) => getEncryptionPublicKeyByWallet(e)}>获取公钥</div>
+					<div className="content">Public key： {encryptionPublicKey}</div>
+					<input className="input-text" placeholder='输入加密内容' value={inputText} onChange={(e) => setInputText(e.target.value)}></input>
+					<div className="button" onClick={(e) => encryptMessage(e)}>加密消息</div>
+					<div className="content">Encrypted: {encryptedMessage}</div>
+					<div className="button" onClick={(e) => decryptMessage(e)}>解密消息</div>
+					<div className="content">Decrypted： {decryptedMessage}</div>
+				</div>
       </header>
     </div>
   );
