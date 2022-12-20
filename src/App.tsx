@@ -220,8 +220,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-				{/* <div style={{fontSize: "18px", marginBottom: "10px"}}>{currentAccount}</div>
-				<div className="button" onClick={(e) => createKeyring(e)}>Initialize wallet by mnemonic </div>
+				<div style={{fontSize: "18px", marginBottom: "10px"}}>{currentAccount}</div>
+				{/* <div className="button" onClick={(e) => createKeyring(e)}>Initialize wallet by mnemonic </div>
 				<div className="button" onClick={(e) => initVaultByLocalStore(e)}>Initialize wallet by local store </div>
 				<div className="button" onClick={(e) => createNewVaultAndKeychain(e)}>Initialize wallet by password </div>
 				<div className="button" onClick={(e) => setLocked(e)}>Lock wallet</div>
