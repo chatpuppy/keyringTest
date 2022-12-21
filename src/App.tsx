@@ -169,7 +169,7 @@ function App() {
 	const getEncryptionPublicKeyByWallet = async (e: any) => {
 		try {
 			const encryptionPublicKey = await window.ethereum.request({
-				method: 'wallet_getEncryptionPublicKey',
+				method: 'eth_getEncryptionPublicKey',
 				params: [currentAccount],
 			});
 			// const publicKey = Buffer.from(encryptionPublicKey, 'base64').toString("hex");
