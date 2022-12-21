@@ -217,6 +217,30 @@ function App() {
 		const tmpUint8Array = new Uint8Array(arr);
 		return tmpUint8Array
 	}
+
+	const switchNetwork = async (e: any) => {
+		try {
+			await window.ethereum.request({
+				method: 'wallet_switchEthereumChain',
+				params: [{ chainId: '0x38' }],
+			});
+		} catch (error: any) {
+			if (error.code === 4902) {
+				try {
+					await window.ethereum.request({
+						method: 'wallet_addEthereumChain',
+						params: [{ 
+							chainId: '0x38', 
+							rpcUrls: ['https://bsc-dataseed1.binance.org/']
+						}],
+					});
+				} catch (error: any) {
+					setErrorMessage(error.message);
+					// handle "add" error
+				}
+			}
+		}
+	}
 	
 
   return (
@@ -235,6 +259,7 @@ function App() {
 				<div className="button" onClick={(e) => getEncryptionPublicKey(e)}>Get public key by address</div>
 				<div className="button" onClick={(e) => getPrivateKey(e)}>Get private key for 1st address</div> */}
 				<div style={{marginTop: "20px"}}>
+					<div className='button' onClick={(e) => switchNetwork(e)}>切换网络</div>
 					<div className="button" onClick={(e) => getEncryptionPublicKeyByWallet(e)}>获取公钥</div>
 					<div className="content">Public key： {encryptionPublicKey}</div>
 					<input className="input-text" placeholder='输入加密内容' value={inputText} onChange={(e) => setInputText(e.target.value)}></input>
