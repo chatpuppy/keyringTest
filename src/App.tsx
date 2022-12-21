@@ -16,6 +16,7 @@ function App() {
 	const [inputText, setInputText] = useState('');
 	const [encryptedMessage, setEncryptedMessage] = useState('');
 	const [decryptedMessage, setDecryptedMessage] = useState('');
+	const [errorMessage, setErrorMessage] = useState('');
 
 	const secrets = { coolStuff: 'all', ssn: 'livin large' };
 	const password = 'hunter55';
@@ -168,16 +169,16 @@ function App() {
 	const getEncryptionPublicKeyByWallet = async (e: any) => {
 		try {
 			const encryptionPublicKey = await window.ethereum.request({
-				method: 'eth_getEncryptionPublicKey',
+				method: 'wallet_getEncryptionPublicKey',
 				params: [currentAccount],
 			});
-			const publicKey = Buffer.from(encryptionPublicKey, 'base64').toString("hex");
+			// const publicKey = Buffer.from(encryptionPublicKey, 'base64').toString("hex");
 			// console.log("address:", address)
-			console.log("publicKey:" , publicKey);
-			console.log("encryptionPublicKey", encryptionPublicKey);
+			console.log("publicKey:" , encryptionPublicKey);
 			setEncryptionPublicKey(encryptionPublicKey);
 		} catch (error: any) {
 			console.log(error);
+			setErrorMessage(error.message);
 		}
 	}
 
@@ -201,7 +202,8 @@ function App() {
 			});
 			console.log(decryptedMessage)
 			setDecryptedMessage(decryptedMessage);
-		} catch (error) {
+		} catch (error: any) {
+			setErrorMessage(error.message);
 			return false;
 		}
 	}
@@ -240,6 +242,7 @@ function App() {
 					<div className="content">Encrypted: {encryptedMessage}</div>
 					<div className="button" onClick={(e) => decryptMessage(e)}>解密消息</div>
 					<div className="content">Decrypted： {decryptedMessage}</div>
+					<div className="error">{errorMessage}</div>
 				</div>
       </header>
     </div>
